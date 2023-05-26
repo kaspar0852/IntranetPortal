@@ -40,7 +40,7 @@ namespace IntranetPortal.InternalApplicationAppService
         }
 
         //[UnitOfWork] enables unit of work for this particular method
-        [Authorize(IntranetPortalPermissions.Create)]
+        [Authorize(IntranetPortalPermissions.InternalApplicationAdmin.Create)]
         public async Task<GetInternalApplicationDto> CreateAsync(CreateInternalApplicationDto input)
         {
             try
@@ -101,8 +101,7 @@ namespace IntranetPortal.InternalApplicationAppService
 
         }
 
-        //[UnitOfWork(IsDisabled =true)] //used to diable the UOW for the current class
-        [Authorize(IntranetPortalPermissions.Delete)]
+        [Authorize(IntranetPortalPermissions.InternalApplicationAdmin.Delete)]
         public async Task<string> DeleteAsync(Guid id)
         {
             try
@@ -259,7 +258,7 @@ namespace IntranetPortal.InternalApplicationAppService
             }
         }
 
-        [Authorize(IntranetPortalPermissions.Update)]
+        [Authorize(IntranetPortalPermissions.InternalApplicationAdmin.Update)]
         public async Task<UpdateInternalApplicationDto> UpdateAsync(UpdateInternalApplicationDto input)
         {
             try
@@ -319,9 +318,7 @@ namespace IntranetPortal.InternalApplicationAppService
             }
         }
 
-
-
-        [Authorize(IntranetPortalPermissions.LogoUpload)]
+        [Authorize(IntranetPortalPermissions.InternalApplicationAdmin.LogoUpload)]
         public async Task<string> UploadLogo(IFormFile logo)
         {
             try

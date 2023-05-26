@@ -4,9 +4,16 @@
     "Menu:Home": "Home",
     "Welcome": "Welcome",
     "LongWelcomeMessage": "Welcome to the application. This is a startup project based on the ABP framework. For more information, visit abp.io.",
-    "Create": "Creating new Internal Application",
-    "Update":"Updating the Internal Application",
-    "Delete":"Deleting the Internal Application",
-    "LogoUpload":"Uploading Logo for Internal Application"
+    "Permission:InternalAppliationAdmin.CreateInternalApplication": "Creating new Internal Application",
+    "Permission:InternalAppliationAdmin.UpdateInternalApplication": "Updating the Internal Application",
+    "Permission:InternalAppliationAdmin.DeleteInternalApplication": "Deleting the Internal Application",
+    "Permission:InternalAppliationAdmin.UploadLogoInternalAppliaction": "Uploading logo for the Internal Application",
+    "Permission:DocumentAdmin.CreateDocument": "Creating new Document",
+    "Permission:DocumentAdmin.UpdateDocument": "Updating the Document",
+    "Permission:DocumentAdmin.DeleteDocument": "Deleting the Document",
+    "Permission:DocumentAdmin.ActivateDocument": "Activate the Document",
+    "Permission:DocumentAdmin.DeactivateDocument": "Deactivating the Document",
+    "Permission:DocumentAdmin.UploadDocument": "Uploading the Document"
+
   }
 }
