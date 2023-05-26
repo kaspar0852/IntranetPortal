@@ -2,7 +2,6 @@
 using IntranetPortal.AppEntities.Documents;
 using IntranetPortal.InternalApplications;
 using Microsoft.EntityFrameworkCore;
-using System.Xml.Linq;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.Data;
@@ -115,6 +114,16 @@ public class IntranetPortalDbContext :
             b.Property(x => x.AcknowledgementDeadlineInDays).HasColumnType("int");
             b.HasOne<DocumentStatus>().WithMany().HasForeignKey(x => x.DocumentStatusId).IsRequired();
         });
+
+        builder.Entity<DocumentAcknowledgementRequestStatuses>(b =>
+        {
+            b.ToTable("DocumentAcknowledgementRequestStatus");
+            b.ConfigureByConvention();
+
+            b.Property(x => x.SystemName).IsRequired().HasMaxLength(100);
+            b.Property(x => x.DisplayName).IsRequired().HasMaxLength(100);
+        });
+
         //builder.Entity<YourEntity>(b =>
         //{
         //    b.ToTable(IntranetPortalConsts.DbTablePrefix + "YourEntities", IntranetPortalConsts.DbSchema);
