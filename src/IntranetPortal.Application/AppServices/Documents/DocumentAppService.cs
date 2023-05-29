@@ -2,7 +2,6 @@
 using IntranetPortal.Documents;
 using IntranetPortal.Documents.Dtos;
 using IntranetPortal.DocumentStatuses;
-using IntranetPortal.InternalApplicationDto;
 using IntranetPortal.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -70,7 +69,7 @@ namespace IntranetPortal.AppServices.Documents
                         throw new UserFriendlyException("The file doesn't exist.");
                     }
 
-                    if (documentStatus.SystemName == "active")
+                    if (documentStatus.SystemName.ToLower() == "active")
                     {
                         var newDocument = new Document
                         {
@@ -130,6 +129,7 @@ namespace IntranetPortal.AppServices.Documents
             }
         }
 
+
         [Authorize(IntranetPortalPermissions.DocumentAdmin.Delete)]
         public async Task<string> DeleteDocumentAsync(Guid id)
         {
@@ -165,6 +165,7 @@ namespace IntranetPortal.AppServices.Documents
                 throw new UserFriendlyException($"{ex}");
             }
         }
+
 
         [Authorize(IntranetPortalPermissions.DocumentAdmin.Update)]
         public async Task<DocumentDto> UpdateDocumentAsync(Guid id, UpdateDocumentDto input)
@@ -287,6 +288,7 @@ namespace IntranetPortal.AppServices.Documents
 
         }
 
+
         [Authorize(IntranetPortalPermissions.DocumentAdmin.Upload)]
         public async Task<string> UploadDocumentAsync(IFormFile document)
         {
@@ -330,6 +332,7 @@ namespace IntranetPortal.AppServices.Documents
                 throw new UserFriendlyException($"{ex}");
             }
         }
+
 
         [Authorize(IntranetPortalPermissions.DocumentAdmin.ActivateDocument)]
         public async Task<ActiveDocumentDto> ActivateDocumentAsync(Guid id)
@@ -382,6 +385,7 @@ namespace IntranetPortal.AppServices.Documents
             }
         }
 
+
         [Authorize(IntranetPortalPermissions.DocumentAdmin.DeactivateDocument)]
         public async Task<DeactivateDocumentDto> DeactivateDocumentAsync(Guid id)
         {
@@ -432,7 +436,6 @@ namespace IntranetPortal.AppServices.Documents
                 throw new UserFriendlyException($"{ex}");
             }
         }
-
 
         public async Task<PagedResultDto<DocumentDto>> GetPagedAndSortedDocumentListAsync(PagedAndSortedDocumentListDto input)
         {

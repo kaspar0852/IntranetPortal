@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Volo.Abp.Application.Dtos;
 
 namespace IntranetPortal.Documents
 {
@@ -16,5 +17,8 @@ namespace IntranetPortal.Documents
         Task<DocumentDto> GetDocumentByIdAsync(Guid id);
         Task<List<GetDocumentStatusDto>> GetDocumentStatusAsync();
         Task<string> UploadDocumentAsync(IFormFile document);
+        Task<ActiveDocumentDto> ActivateDocumentAsync(Guid id);
+        Task<DeactivateDocumentDto> DeactivateDocumentAsync(Guid id);
+        Task<PagedResultDto<DocumentDto>> GetPagedAndSortedDocumentListAsync(PagedAndSortedDocumentListDto input);
     }
 }
