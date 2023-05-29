@@ -1,5 +1,7 @@
 ﻿
+using IntranetPortal.AppEntities;
 using IntranetPortal.AppEntities.Documents;
+using IntranetPortal.AppEntities.UserProfiles;
 using IntranetPortal.InternalApplications;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
@@ -59,8 +61,14 @@ public class IntranetPortalDbContext :
 
     #endregion
     public DbSet<DocumentAcknowledgementRequestStatuses> DocumentAcknowledgementRequestStatus { get; set; }
-
     public DbSet<DocumentAcknowledgementRequests> DocumentAcknowledgementRequests { get; set; }
+    public DbSet<Department> Departments { get; set; }
+    public DbSet<Designation> Designation { get; set; }
+    public DbSet<UserProfileStatus> UserProfileStatuses { get; set; }
+    public DbSet<UserProfile> UserProfiles { get; set; }
+
+    public DbSet<IdentityUser> IdentityUsers { get; set; }
+
 
     public IntranetPortalDbContext(DbContextOptions<IntranetPortalDbContext> options)
         : base(options)
@@ -138,6 +146,54 @@ public class IntranetPortalDbContext :
             b.HasOne<Document>().WithMany().HasForeignKey(x => x.DocumentId).IsRequired();
             b.HasOne<DocumentAcknowledgementRequestStatuses>().WithMany().HasForeignKey(x => x.DocumentAcknowledgementRequestStatusId).IsRequired();
         });
+
+        builder.Entity<Department>(b =>
+        {
+            b.ToTable("Departments");
+            b.ConfigureByConvention();
+
+            b.Property(x => x.Name).IsRequired().HasMaxLength(200);
+            b.Property(x => x.ReferenceId).IsRequired().HasMaxLength(200);
+            b.Property(x => x.Code).HasMaxLength(200);
+            b.Property(x => x.IsActive);
+        });
+
+        builder.Entity<Designation>(b =>
+        {
+            b.ToTable("Designations");
+            b.ConfigureByConvention();
+
+            b.Property(x => x.Name).IsRequired().HasMaxLength(200);
+            b.Property(x => x.ReferenceId).IsRequired().HasMaxLength(200);
+            b.Property(x => x.Code).HasMaxLength(200);
+            b.Property(x => x.IsActive);
+        });
+
+        builder.Entity<UserProfileStatus>(b =>
+        {
+            b.ToTable("UserProfileStatuses");
+            b.ConfigureByConvention();
+
+            b.Property(x => x.SystemName).IsRequired();
+            b.Property(x => x.DisplayName).IsRequired();
+        });
+
+        builder.Entity<UserProfile>(b =>
+        {
+            b.ToTable("UserProfiles");
+            b.ConfigureByConvention();
+
+            b.HasOne<IdentityUser>().WithMany().HasForeignKey("UserProfile","AbpUserId");
+            b.HasOne<Designation>().WithMany().HasForeignKey(x => x.DesignationId).IsRequired();
+            b.HasOne<Department>().WithMany().HasForeignKey(x => x.DepartmentId).IsRequired();
+            b.Property(x => x.DateOfBirth).IsRequired();
+            b.Property(x => x.ProfilePictureUrl);
+            b.Property(x => x.HiredDate).IsRequired();
+            b.Property(x => x.ReferenceId).IsRequired().HasMaxLength(200);
+            b.Property(x => x.MiddleName);
+            b.HasOne<UserProfileStatus>().WithMany().HasForeignKey(x => x.UserStatusId).IsRequired();
+        });
+
 
         //builder.Entity<YourEntity>(b =>
         //{

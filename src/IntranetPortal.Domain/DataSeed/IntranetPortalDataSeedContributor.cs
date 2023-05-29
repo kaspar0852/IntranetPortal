@@ -1,4 +1,5 @@
-﻿using IntranetPortal.AppEntities.Documents;
+﻿using IntranetPortal.AppEntities;
+using IntranetPortal.AppEntities.Documents;
 using System;
 using System.Threading.Tasks;
 using Volo.Abp.Data;
@@ -7,17 +8,27 @@ using Volo.Abp.Domain.Repositories;
 
 namespace IntranetPortal.DataSeed
 {
-    public class DocumentStatusDataSeedContributor : IDataSeedContributor, ITransientDependency
+    public class IntranetPortalDataSeedContributor : IDataSeedContributor, ITransientDependency
     {
         private readonly IRepository<DocumentStatus, Guid> _documentStatusRepository;
         private readonly IRepository<Document, Guid> _documentRepository;
         private readonly IRepository<DocumentAcknowledgementRequestStatuses, Guid> _documentAcknowledgementRequestStatus;
+        private readonly IRepository<Department, Guid> _department;
+        private readonly IRepository<Designation, Guid> _designation;
 
-        public DocumentStatusDataSeedContributor(IRepository<DocumentStatus, Guid> documentStatusRepository, IRepository<Document, Guid> documentRepository, IRepository<DocumentAcknowledgementRequestStatuses, Guid> documentAcknowledgementRequestStatus)
+        public IntranetPortalDataSeedContributor(
+            IRepository<Department,Guid> department,
+            IRepository<Designation,Guid> designation,
+            IRepository<DocumentStatus, Guid> documentStatusRepository, 
+            IRepository<Document, Guid> documentRepository,
+            IRepository<DocumentAcknowledgementRequestStatuses, Guid> documentAcknowledgementRequestStatus)
         {
             _documentStatusRepository = documentStatusRepository;
             _documentRepository = documentRepository;
             _documentAcknowledgementRequestStatus = documentAcknowledgementRequestStatus;
+            _department = department;
+            _designation = designation;
+
         }
 
         public async Task SeedAsync(DataSeedContext context)
@@ -83,30 +94,47 @@ namespace IntranetPortal.DataSeed
                     );
             }
 
-/*            if(await _documentAcKnowledgementRequestStatusRepository.GetCountAsync() <= 0)
+            if(await _department.GetCountAsync() <= 0)
             {
-                await _documentAcKnowledgementRequestStatusRepository.InsertAsync(
-                    new DocumentAcknowledgementRequestStatuses
+                await _department.InsertAsync(
+                    new Department
                     {
-                        SystemName = "New",
-                        DisplayName = "New"
-                    },autoSave: true
-                    );
-                await _documentAcKnowledgementRequestStatusRepository.InsertAsync(
-                    new DocumentAcknowledgementRequestStatuses
+                        Name = "Development",
+                        ReferenceId = "dev101",
+                        Code = "101",
+                        IsActive = true
+                    },autoSave : true);
+                await _department.InsertAsync(
+                    new Department
                     {
-                        SystemName = "Revoked",
-                        DisplayName = "Revoked"
-                    },autoSave:true);
-                await _documentAcKnowledgementRequestStatusRepository.InsertAsync(
-                    new DocumentAcknowledgementRequestStatuses
+                        Name = "QA",
+                        ReferenceId = "qa101",
+                        Code = "101",
+                        IsActive = true
+                    },autoSave : true);
+            }
+
+            if (await _designation.GetCountAsync() <= 0)
+            {
+                await _designation.InsertAsync(
+                    new Designation
                     {
-                        SystemName = "Acknowledged",
-                        DisplayName = "Acknowledged"
-                    },autoSave:true);
-            }*/
+                        Name = "Intern",
+                        ReferenceId = "200",
+                        Code = "200",
+                        IsActive = true
+                    }, autoSave: true);
+                await _designation.InsertAsync(
+                    new Designation
+                    {
+                        Name = "Associate Software Engineer",
+                        ReferenceId = "dev100",
+                        Code = "100",
+                        IsActive = true
+                    }, autoSave: true);
+            }
 
         }
     }
-}
+}   
 

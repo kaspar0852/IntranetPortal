@@ -1,8 +1,10 @@
 ﻿using IntranetPortal.AppEntities.Documents;
+using IntranetPortal.DocumentAcknowledgementRequestStatus;
 using IntranetPortal.Documents;
 using IntranetPortal.Documents.Dtos;
 using IntranetPortal.DocumentStatuses;
 using IntranetPortal.Permissions;
+using IntranetPortal.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -29,6 +31,8 @@ namespace IntranetPortal.AppServices.Documents
     {
         private readonly IRepository<Document, Guid> _documentRepository;
         private readonly IRepository<DocumentStatus, Guid> _documentStatusRepository;
+        private readonly IRepository<DocumentAcknowledgementRequestStatuses, Guid> _documentAcknowledgementRequestStatus;
+        private readonly IRepository<DocumentAcknowledgementRequests, Guid> _documentAcknowledgementRequest;
         private readonly IConfiguration _configuration;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly IRepository<IdentityUser, Guid> _identityUserRepository;
@@ -36,12 +40,16 @@ namespace IntranetPortal.AppServices.Documents
         public DocumentAppService(
             IConfiguration configuration,
             IRepository<DocumentStatus, Guid> documentStatusRepository,
-            IRepository<Document,Guid> documentrepository,
+            IRepository<Document, Guid> documentrepository,
+            IRepository<DocumentAcknowledgementRequestStatuses, Guid> documentAcknowledgementRequestStatus,
+            IRepository<DocumentAcknowledgementRequests,Guid> documentAcknowledgementRequest,
             IRepository<IdentityUser,Guid> identityUserRepository,
             IUnitOfWorkManager unitOfWorkManager)
         {
             _documentStatusRepository = documentStatusRepository;
             _documentRepository = documentrepository;
+            _documentAcknowledgementRequestStatus = documentAcknowledgementRequestStatus;
+            _documentAcknowledgementRequest = documentAcknowledgementRequest;
             _configuration = configuration;
             _unitOfWorkManager = unitOfWorkManager;
             _identityUserRepository = identityUserRepository;
@@ -548,6 +556,29 @@ namespace IntranetPortal.AppServices.Documents
                 throw new UserFriendlyException($"{ex}");
             }
         }
-    }
 
+       public async Task<List<GetDocumentAcknowledgementRequestStatusDto>> GetDocumentAcknowledgementRequestStatusAsync()
+        {
+            try
+            {
+                Logger.LogInformation($"GetDocumentAcknowledgementRequestStatus requested by User:{CurrentUser.Id}");
+                Logger.LogDebug($"GetDocumentAcknowledgementRequestStatus requested for InternalApplication:{(CurrentUser.Id)}");
+
+                using(var uow = _unitOfWorkManager.Begin())
+                {
+                    var records = await _documentAcknowledgementRequestStatus.ToListAsync();
+                    await uow.CompleteAsync();
+                    Logger.LogInformation($"GetDocumentAcknowledgementRequestStatuses responded for User:{CurrentUser.Id}");
+                    return ObjectMapper.Map<List<DocumentAcknowledgementRequestStatuses>, List<GetDocumentAcknowledgementRequestStatusDto>>(records);
+
+                }
+            }
+            catch(Exception ex)
+            {
+                Logger.LogError(ex, nameof(GetDocumentAcknowledgementRequestStatusAsync));
+                throw new UserFriendlyException($"An exception was caught. {ex}");
+            }
+        }
+
+     }
 }
