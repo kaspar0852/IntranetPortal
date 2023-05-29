@@ -58,6 +58,9 @@ public class IntranetPortalDbContext :
     public DbSet<TenantConnectionString> TenantConnectionStrings { get; set; }
 
     #endregion
+    public DbSet<DocumentAcknowledgementRequestStatuses> DocumentAcknowledgementRequestStatus { get; set; }
+
+    public DbSet<DocumentAcknowledgementRequests> DocumentAcknowledgementRequests { get; set; }
 
     public IntranetPortalDbContext(DbContextOptions<IntranetPortalDbContext> options)
         : base(options)
@@ -122,6 +125,18 @@ public class IntranetPortalDbContext :
 
             b.Property(x => x.SystemName).IsRequired().HasMaxLength(100);
             b.Property(x => x.DisplayName).IsRequired().HasMaxLength(100);
+        });
+
+        builder.Entity<DocumentAcknowledgementRequests>(b =>
+        {
+            b.ToTable("DocumentAcknowledgementRequests");
+            b.ConfigureByConvention();
+
+            b.Property(x => x.AbpUserId);
+            b.Property(x => x.AcknowledgedDateTime).IsRequired();
+            b.Property(x => x.DueDateTime).IsRequired();
+            b.HasOne<Document>().WithMany().HasForeignKey(x => x.DocumentId).IsRequired();
+            b.HasOne<DocumentAcknowledgementRequestStatuses>().WithMany().HasForeignKey(x => x.DocumentAcknowledgementRequestStatusId).IsRequired();
         });
 
         //builder.Entity<YourEntity>(b =>

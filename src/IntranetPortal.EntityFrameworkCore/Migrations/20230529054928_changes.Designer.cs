@@ -3,6 +3,7 @@ using System;
 using IntranetPortal.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Volo.Abp.EntityFrameworkCore;
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace IntranetPortal.Migrations
 {
     [DbContext(typeof(IntranetPortalDbContext))]
-    partial class IntranetPortalDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230529054928_changes")]
+    partial class changes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -124,81 +127,6 @@ namespace IntranetPortal.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DocumentAcknowledgementRequestStatus", (string)null);
-                });
-
-            modelBuilder.Entity("IntranetPortal.AppEntities.Documents.DocumentAcknowledgementRequests", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AbpUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("AcknowledgedDateTime")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasMaxLength(40)
-                        .HasColumnType("character varying(40)")
-                        .HasColumnName("ConcurrencyStamp");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("CreationTime");
-
-                    b.Property<Guid?>("CreatorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("CreatorId");
-
-                    b.Property<Guid?>("DeleterId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("DeleterId");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("DeletionTime");
-
-                    b.Property<Guid>("DocumentAcknowledgementRequestStatusId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("DocumentAcknowledgementRequestStatusesId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("DocumentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("DueDateTime")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("ExtraProperties")
-                        .HasColumnType("text")
-                        .HasColumnName("ExtraProperties");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false)
-                        .HasColumnName("IsDeleted");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("LastModificationTime");
-
-                    b.Property<Guid?>("LastModifierId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("LastModifierId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DocumentAcknowledgementRequestStatusId");
-
-                    b.HasIndex("DocumentAcknowledgementRequestStatusesId")
-                        .HasDatabaseName("IX_DocumentAcknowledgementRequests_DocumentAcknowledgementReq~1");
-
-                    b.HasIndex("DocumentId");
-
-                    b.ToTable("DocumentAcknowledgementRequests", (string)null);
                 });
 
             modelBuilder.Entity("IntranetPortal.AppEntities.Documents.DocumentStatus", b =>
@@ -1984,30 +1912,6 @@ namespace IntranetPortal.Migrations
                         .HasForeignKey("DocumentStatusId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("IntranetPortal.AppEntities.Documents.DocumentAcknowledgementRequests", b =>
-                {
-                    b.HasOne("IntranetPortal.AppEntities.Documents.DocumentAcknowledgementRequestStatuses", null)
-                        .WithMany()
-                        .HasForeignKey("DocumentAcknowledgementRequestStatusId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("IntranetPortal.AppEntities.Documents.DocumentAcknowledgementRequestStatuses", "DocumentAcknowledgementRequestStatuses")
-                        .WithMany()
-                        .HasForeignKey("DocumentAcknowledgementRequestStatusesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_DocumentAcknowledgementRequests_DocumentAcknowledgementReq~1");
-
-                    b.HasOne("IntranetPortal.AppEntities.Documents.Document", null)
-                        .WithMany()
-                        .HasForeignKey("DocumentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DocumentAcknowledgementRequestStatuses");
                 });
 
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLogAction", b =>

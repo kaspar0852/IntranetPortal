@@ -22,8 +22,7 @@ using Volo.Abp.Uow;
 namespace IntranetPortal.InternalApplicationAppService
 {
     [Authorize]
-    //[UnitOfWork] //enables unit of work for all the methods present in this class
-    public class InternalApplicationAppService : IntranetPortalAppService, IInternalApplication //IUnitOfWorkEnabled
+    public class InternalApplicationAppService : IntranetPortalAppService, IInternalApplication 
     {
         private readonly IRepository<InternalApplications.InternalApplication, Guid> _internalApplicationRepository;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
@@ -39,7 +38,6 @@ namespace IntranetPortal.InternalApplicationAppService
             _configuration = configuration;
         }
 
-        //[UnitOfWork] enables unit of work for this particular method
         [Authorize(IntranetPortalPermissions.InternalApplicationAdmin.Create)]
         public async Task<GetInternalApplicationDto> CreateAsync(CreateInternalApplicationDto input)
         {
