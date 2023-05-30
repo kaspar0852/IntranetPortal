@@ -67,8 +67,6 @@ public class IntranetPortalDbContext :
     public DbSet<UserProfileStatus> UserProfileStatuses { get; set; }
     public DbSet<UserProfile> UserProfiles { get; set; }
 
-    public DbSet<IdentityUser> IdentityUsers { get; set; }
-
 
     public IntranetPortalDbContext(DbContextOptions<IntranetPortalDbContext> options)
         : base(options)
@@ -183,7 +181,7 @@ public class IntranetPortalDbContext :
             b.ToTable("UserProfiles");
             b.ConfigureByConvention();
 
-            b.HasOne<IdentityUser>().WithMany().HasForeignKey("UserProfile","AbpUserId");
+            b.HasOne<IdentityUser>().WithOne().HasForeignKey("UserProfile", "AbpUserId");
             b.HasOne<Designation>().WithMany().HasForeignKey(x => x.DesignationId).IsRequired();
             b.HasOne<Department>().WithMany().HasForeignKey(x => x.DepartmentId).IsRequired();
             b.Property(x => x.DateOfBirth).IsRequired();
@@ -191,7 +189,7 @@ public class IntranetPortalDbContext :
             b.Property(x => x.HiredDate).IsRequired();
             b.Property(x => x.ReferenceId).IsRequired().HasMaxLength(200);
             b.Property(x => x.MiddleName);
-            b.HasOne<UserProfileStatus>().WithMany().HasForeignKey(x => x.UserStatusId).IsRequired();
+            b.HasOne<UserProfileStatus>().WithMany().HasForeignKey(x => x.UserProfileStatusId).IsRequired();
         });
 
 

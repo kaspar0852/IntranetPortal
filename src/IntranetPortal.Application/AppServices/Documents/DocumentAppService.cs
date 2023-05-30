@@ -1,15 +1,18 @@
 ﻿using IntranetPortal.AppEntities.Documents;
+using IntranetPortal.AppEntities.UserProfiles;
 using IntranetPortal.DocumentAcknowledgementRequestStatus;
 using IntranetPortal.Documents;
 using IntranetPortal.Documents.Dtos;
 using IntranetPortal.DocumentStatuses;
 using IntranetPortal.Permissions;
 using IntranetPortal.Responses;
+using IntranetPortal.UserProfiles;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -33,6 +36,7 @@ namespace IntranetPortal.AppServices.Documents
         private readonly IRepository<DocumentStatus, Guid> _documentStatusRepository;
         private readonly IRepository<DocumentAcknowledgementRequestStatuses, Guid> _documentAcknowledgementRequestStatus;
         private readonly IRepository<DocumentAcknowledgementRequests, Guid> _documentAcknowledgementRequest;
+        private readonly IRepository<UserProfile, Guid> _userProfileRepository;
         private readonly IConfiguration _configuration;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly IRepository<IdentityUser, Guid> _identityUserRepository;
@@ -44,6 +48,7 @@ namespace IntranetPortal.AppServices.Documents
             IRepository<DocumentAcknowledgementRequestStatuses, Guid> documentAcknowledgementRequestStatus,
             IRepository<DocumentAcknowledgementRequests,Guid> documentAcknowledgementRequest,
             IRepository<IdentityUser,Guid> identityUserRepository,
+            IRepository<UserProfile,Guid> userProfileRepository,
             IUnitOfWorkManager unitOfWorkManager)
         {
             _documentStatusRepository = documentStatusRepository;
@@ -53,6 +58,7 @@ namespace IntranetPortal.AppServices.Documents
             _configuration = configuration;
             _unitOfWorkManager = unitOfWorkManager;
             _identityUserRepository = identityUserRepository;
+            _userProfileRepository = userProfileRepository;
         }
 
         [Authorize(IntranetPortalPermissions.DocumentAdmin.Create)]
@@ -92,13 +98,19 @@ namespace IntranetPortal.AppServices.Documents
                         var documentQuery = await _documentRepository.GetQueryableAsync();
                         var documentStatusQuery = await _documentStatusRepository.GetQueryableAsync();
                         var userQuery = await _identityUserRepository.GetQueryableAsync();
+                        var userProfileQuery = await _userProfileRepository.GetQueryableAsync();
+
 
                         var newDocumentQuery = (from document in documentQuery
                                                 join status in documentStatusQuery
                                                 on document.DocumentStatusId equals status.Id
 
                                                 join creator in userQuery
-                                                on document.CreatorId equals creator.Id
+                                                on document.CreatorId equals creator.Id into CreatorGroupJoin
+
+                                                from creator in CreatorGroupJoin.DefaultIfEmpty()
+                                                join creatorProfile in userProfileQuery
+                                                on creator.Id equals creatorProfile.AbpUserId
 
                                                 select new DocumentDto
                                                 {
@@ -113,9 +125,13 @@ namespace IntranetPortal.AppServices.Documents
                                                     CreatorId = document.CreatorId,
                                                     LastModifierId = CurrentUser.Id,
                                                     CreationTime = document.CreationTime,
-                                                    CreatedByFullName = creator.UserName,
+                                                    CreatedByFullName = creator == null
+                                                    ? null
+                                                    : (string.IsNullOrEmpty(creatorProfile.MiddleName)
+                                                    ? $"{creator.Name} {creator.Surname}"
+                                                    : $"{creator.Name} {creatorProfile.MiddleName} {creator.Surname}"),
                                                     LastModificationTime = DateTime.Now,
-                                                    LastModifiedByFullName = creator.UserName
+                                                    LastModifiedByFullName = CurrentUser.Name + " " + CurrentUser.SurName,
                                                 }).FirstOrDefault();
 
                         /*return ObjectMapper.Map<Document, DocumentDto>(newDocument, newDocumentQuery);*/
@@ -188,6 +204,8 @@ namespace IntranetPortal.AppServices.Documents
 
                     var documentToUpdate = await _documentRepository.FindAsync(id);
                     var documentStatus = await _documentStatusRepository.FirstOrDefaultAsync(x => x.SystemName.ToLower().Trim().Equals("active"));
+                    var userProfileQuery = await _userProfileRepository.GetQueryableAsync();
+
 
                     if (documentToUpdate == null)
                     {
@@ -209,8 +227,13 @@ namespace IntranetPortal.AppServices.Documents
                                           join status in documentstatusQuery
                                           on document.DocumentStatusId equals status.Id
 
+
                                           join creator in userQuery
-                                          on document.CreatorId equals creator.Id
+                                          on document.CreatorId equals creator.Id into creatorGroupJoin
+
+                                          from creator in creatorGroupJoin.DefaultIfEmpty()
+                                          join creatorProfile in userProfileQuery
+                                          on creator.Id equals creatorProfile.AbpUserId
 
                                           select new DocumentDto
                                           {
@@ -225,7 +248,11 @@ namespace IntranetPortal.AppServices.Documents
                                               CreatorId = document.CreatorId,
                                               LastModifierId = CurrentUser.Id,
                                               CreationTime = document.CreationTime,
-                                              CreatedByFullName = creator.UserName,
+                                              CreatedByFullName = creator == null
+                                              ? null
+                                              : (string.IsNullOrEmpty(creatorProfile.MiddleName)
+                                              ? $"{creator.Name} {creator.Surname}"
+                                              : $"{creator.Name} {creatorProfile.MiddleName} {creator.Surname}"),
                                               LastModificationTime = DateTime.Now,
                                               LastModifiedByFullName = creator.UserName
                                           }).FirstOrDefault();
@@ -256,14 +283,40 @@ namespace IntranetPortal.AppServices.Documents
 
                 using(var uow = _unitOfWorkManager.Begin())
                 {
-                    var records = await _documentRepository.FindAsync(id);
-                    if (records == null)
-                    {
-                        throw new UserFriendlyException("No Document found", code: "400");
-                    }
+                    var documentQuery = (await _documentRepository.FindAsync(id));
+                    var userQuery = await _identityUserRepository.GetQueryableAsync();
+                    var activeStatus = await _documentStatusRepository.FindAsync(x => x.SystemName == DocumentStatusConstants.ACTIVE);
+                    var userProfileQuery = await _userProfileRepository.GetQueryableAsync();
+
+                    var queryDto =  from query in userQuery
+                                     join userProfile in userProfileQuery
+                                     on query.Id equals userProfile.AbpUserId
+
+                                     select new DocumentDto
+                                     {
+                                         Id = documentQuery.Id,
+                                         Name = documentQuery.Name,
+                                         Description = documentQuery.Description,
+                                         DocumentUrl = documentQuery.DocumentUrl,
+                                         AcknowledgementDeadlineInDays = documentQuery.AcknowledgementDeadlineInDays,
+                                         DocumentStatusId = activeStatus.Id,
+                                         DocumentStatusDisplayName = activeStatus.DisplayName,
+                                         DocumentStatusSystemName = activeStatus.SystemName,
+                                         CreatorId = documentQuery.CreatorId,
+                                         CreatedByFullName = query == null ?
+                                                   null :
+                                                   string.IsNullOrEmpty(userProfile.MiddleName) ?
+                                                   $"{query.Name} {query.Surname}" :
+                                                   $"{query.Name} {userProfile.MiddleName} {query.Surname}",
+                                         CreationTime = documentQuery.CreationTime,
+                                         LastModifierId = CurrentUser.Id,
+                                         LastModifiedByFullName = CurrentUser.Name + " " + CurrentUser.SurName,
+                                         LastModificationTime = DateTime.Now
+                                     };
+                    var outputDto = queryDto.FirstOrDefault();
                     await uow.CompleteAsync();
-                    Logger.LogInformation($"GetDocumentById responded by User:{(CurrentUser.Id)}");
-                    return ObjectMapper.Map<Document, DocumentDto>(records);
+                    Logger.LogInformation($"Activate document responded for User:{CurrentUser.Id}");
+                    return outputDto;
                 }
             }
             catch (Exception ex)
@@ -355,6 +408,7 @@ namespace IntranetPortal.AppServices.Documents
                     var documentQuery= (await _documentRepository.FindAsync(id));
                     var userQuery = await _identityUserRepository.GetQueryableAsync();
                     var activeStatus = await _documentStatusRepository.FindAsync(x => x.SystemName == DocumentStatusConstants.ACTIVE);
+                    var userProfileQuery = await _userProfileRepository.GetQueryableAsync();
 
                     if (documentQuery.DocumentStatusId == activeStatus.Id)
                     {
@@ -365,6 +419,9 @@ namespace IntranetPortal.AppServices.Documents
                     await _documentRepository.UpdateAsync(documentQuery);
 
                     var activeDocumentQuery = (from query in userQuery
+                                               join userProfile in userProfileQuery
+                                               on query.Id equals userProfile.AbpUserId
+
                                                select new ActiveDocumentDto
                                                {
                                                    Id = documentQuery.Id,
@@ -376,9 +433,10 @@ namespace IntranetPortal.AppServices.Documents
                                                    DocumentStatusDisplayName = activeStatus.DisplayName,
                                                    DocumentStatusSystemName = activeStatus.SystemName,
                                                    CreatorId = documentQuery.CreatorId,
-                                                   CreatedByFullName = query.UserName,
+                                                   CreatedByFullName = query.UserName + " " + userProfile.MiddleName + " " + query.Surname,
                                                    CreationTime = documentQuery.CreationTime,
                                                    LastModifierId = CurrentUser.Id,
+                                                   ModifiedByLastName = CurrentUser.Name + " " + CurrentUser.SurName,
                                                    LastModificationTime = DateTime.Now,
                                                }).FirstOrDefault();
                     await uow.CompleteAsync();
@@ -407,6 +465,8 @@ namespace IntranetPortal.AppServices.Documents
                     var documentQuery = (await _documentRepository.FindAsync(id));
                     var userQuery = await _identityUserRepository.GetQueryableAsync();
                     var activeStatus = await _documentStatusRepository.FindAsync(x => x.SystemName == DocumentStatusConstants.INACTIVE);
+                    var userProfileQuery = await _userProfileRepository.GetQueryableAsync();
+
 
                     if (documentQuery.DocumentStatusId == activeStatus.Id)
                     {
@@ -417,6 +477,8 @@ namespace IntranetPortal.AppServices.Documents
                     await _documentRepository.UpdateAsync(documentQuery);
 
                     var activeDocumentQuery = (from query in userQuery
+                                               join userProfile in userProfileQuery
+                                               on query.Id equals userProfile.AbpUserId
                                                select new DeactivateDocumentDto
                                                {
                                                    Id = documentQuery.Id,
@@ -428,9 +490,10 @@ namespace IntranetPortal.AppServices.Documents
                                                    DocumentStatusDisplayName = activeStatus.DisplayName,
                                                    DocumentStatusSystemName = activeStatus.SystemName,
                                                    CreatorId = documentQuery.CreatorId,
-                                                   CreatedByFullName = query.UserName,
+                                                   CreatedByFullName = query.UserName + " " + userProfile.MiddleName + " " + query.Surname,
                                                    CreationTime = documentQuery.CreationTime,
                                                    LastModifierId = CurrentUser.Id,
+                                                   LastModifiedByFullname = CurrentUser.Name + " " + CurrentUser.SurName,
                                                    LastModificationTime = DateTime.Now,
                                                }).FirstOrDefault();
                     await uow.CompleteAsync();
@@ -457,6 +520,8 @@ namespace IntranetPortal.AppServices.Documents
                     var documentQuery = await _documentRepository.GetQueryableAsync();
                     var documentStatusQuery = await _documentStatusRepository.GetQueryableAsync();
                     var userQuery = await _identityUserRepository.GetQueryableAsync();
+                    var userProfileQuery = await _userProfileRepository.GetQueryableAsync();
+
 
                     #region Filter
                     if (input.FromDate.HasValue)
@@ -508,6 +573,9 @@ namespace IntranetPortal.AppServices.Documents
                                  join creator in userQuery
                                  on document.CreatorId equals creator.Id
 
+                                 join userProfile in userProfileQuery
+                                 on creator.Id equals userProfile.AbpUserId
+
                                  select new
                                     {
                                         document.Id,
@@ -522,7 +590,13 @@ namespace IntranetPortal.AppServices.Documents
                                         document.LastModifierId,
                                         status.SystemName,
                                         status.DisplayName,
-                                        creator.UserName
+                                        creator.UserName,
+                                        CreatedByFullName = creator == null
+                                        ? null 
+                                        : (string.IsNullOrEmpty(userProfile.MiddleName) 
+                                        ? $"{creator.Name} {creator.Surname}" 
+                                        : $"{creator.Name} {userProfile.MiddleName} {creator.Surname}"),
+                                        /*LastModifiedByFullName*/
                                  };
 
                     var queryResult = query.Select(x => new DocumentDto
@@ -539,7 +613,7 @@ namespace IntranetPortal.AppServices.Documents
                         CreationTime = x.CreationTime,
                         DocumentStatusSystemName = x.SystemName,
                         DocumentStatusDisplayName = x.DisplayName,
-                        CreatedByFullName = x.UserName,
+                        CreatedByFullName = x.CreatedByFullName,
                         LastModifiedByFullName = x.UserName
                     }).Skip(input.SkipCount).Take(input.MaxResultCount).ToList();
 

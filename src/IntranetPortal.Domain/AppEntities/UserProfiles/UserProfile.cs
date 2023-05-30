@@ -17,6 +17,6 @@ namespace IntranetPortal.AppEntities.UserProfiles
         public DateTime HiredDate { get; set; }
         public string ReferenceId { get; set; }
         public string? MiddleName { get; set; }
-        public Guid UserStatusId { get; set; }
+        public Guid UserProfileStatusId { get; set; }
     }
 }
