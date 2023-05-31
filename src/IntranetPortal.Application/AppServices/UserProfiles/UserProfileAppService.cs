@@ -1,6 +1,7 @@
 ﻿using IntranetPortal.AppEntities;
 using IntranetPortal.AppEntities.UserProfiles;
 using IntranetPortal.InternalApplication;
+using IntranetPortal.UserProfiles;
 using IntranetPortal.UserProfiles.Dtos;
 using Microsoft.Extensions.Logging;
 using System;
@@ -16,7 +17,7 @@ using Volo.Abp.Users;
 
 namespace IntranetPortal.AppServices.UserProfiles
 {
-    public class UserProfileAppService : IntranetPortalAppService
+    public class UserProfileAppService : IntranetPortalAppService, IUserProfileAppService
     {
         private readonly IRepository<UserProfileStatus, Guid> _userStatusRepository;
         private readonly IRepository<UserProfile, Guid> _userProfileRepository;

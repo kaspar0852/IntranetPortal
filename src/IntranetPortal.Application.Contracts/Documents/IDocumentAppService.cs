@@ -20,5 +20,6 @@ namespace IntranetPortal.Documents
         Task<ActiveDocumentDto> ActivateDocumentAsync(Guid id);
         Task<DeactivateDocumentDto> DeactivateDocumentAsync(Guid id);
         Task<PagedResultDto<DocumentDto>> GetPagedAndSortedDocumentListAsync(PagedAndSortedDocumentListDto input);
+        Task<List<GetDocumentAcknowledgementRequestStatusDto>> GetDocumentAcknowledgementRequestStatusAsync();
     }
 }

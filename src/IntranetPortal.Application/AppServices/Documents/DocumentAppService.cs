@@ -1,18 +1,14 @@
 ﻿using IntranetPortal.AppEntities.Documents;
 using IntranetPortal.AppEntities.UserProfiles;
-using IntranetPortal.DocumentAcknowledgementRequestStatus;
 using IntranetPortal.Documents;
 using IntranetPortal.Documents.Dtos;
 using IntranetPortal.DocumentStatuses;
 using IntranetPortal.Permissions;
-using IntranetPortal.Responses;
-using IntranetPortal.UserProfiles;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -24,7 +20,6 @@ using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Identity;
-using Volo.Abp.ObjectMapping;
 using Volo.Abp.Uow;
 
 namespace IntranetPortal.AppServices.Documents
@@ -109,6 +104,10 @@ namespace IntranetPortal.AppServices.Documents
                                                 on document.CreatorId equals creator.Id into CreatorGroupJoin
 
                                                 from creator in CreatorGroupJoin.DefaultIfEmpty()
+                                                join modifierProfile in userQuery
+                                                on document.LastModifierId equals modifierProfile.Id into ModifierGroupJoin
+
+                                                from modifier in ModifierGroupJoin.DefaultIfEmpty()
                                                 join creatorProfile in userProfileQuery
                                                 on creator.Id equals creatorProfile.AbpUserId
 
@@ -131,7 +130,11 @@ namespace IntranetPortal.AppServices.Documents
                                                     ? $"{creator.Name} {creator.Surname}"
                                                     : $"{creator.Name} {creatorProfile.MiddleName} {creator.Surname}"),
                                                     LastModificationTime = DateTime.Now,
-                                                    LastModifiedByFullName = CurrentUser.Name + " " + CurrentUser.SurName,
+                                                    LastModifiedByFullName = modifier == null
+                                                    ? null
+                                                    : (string.IsNullOrEmpty(creatorProfile.MiddleName)
+                                                    ? $"{modifier.Name}{modifier.Surname}"
+                                                    : $"{modifier.Name}{creatorProfile.MiddleName}{modifier.Surname}"),
                                                 }).FirstOrDefault();
 
                         /*return ObjectMapper.Map<Document, DocumentDto>(newDocument, newDocumentQuery);*/
@@ -232,6 +235,10 @@ namespace IntranetPortal.AppServices.Documents
                                           on document.CreatorId equals creator.Id into creatorGroupJoin
 
                                           from creator in creatorGroupJoin.DefaultIfEmpty()
+                                          join modifierProfile in userQuery
+                                          on document.LastModifierId equals modifierProfile.Id into ModifierGroupJoin
+
+                                          from modifier in ModifierGroupJoin.DefaultIfEmpty()
                                           join creatorProfile in userProfileQuery
                                           on creator.Id equals creatorProfile.AbpUserId
 
@@ -254,7 +261,11 @@ namespace IntranetPortal.AppServices.Documents
                                               ? $"{creator.Name} {creator.Surname}"
                                               : $"{creator.Name} {creatorProfile.MiddleName} {creator.Surname}"),
                                               LastModificationTime = DateTime.Now,
-                                              LastModifiedByFullName = creator.UserName
+                                              LastModifiedByFullName = modifier == null
+                                                    ? null
+                                                    : (string.IsNullOrEmpty(creatorProfile.MiddleName)
+                                                    ? $"{modifier.Name}{modifier.Surname}"
+                                                    : $"{modifier.Name}{creatorProfile.MiddleName}{modifier.Surname}"),
                                           }).FirstOrDefault();
                             await uow.CompleteAsync();
                             Logger.LogInformation($"UpdatedDocument responded for the User:{CurrentUser.Id}");
@@ -571,10 +582,15 @@ namespace IntranetPortal.AppServices.Documents
                                  on document.DocumentStatusId equals status.Id
 
                                  join creator in userQuery
-                                 on document.CreatorId equals creator.Id
+                                 on document.CreatorId equals creator.Id into CreatorGroupJoin
 
-                                 join userProfile in userProfileQuery
-                                 on creator.Id equals userProfile.AbpUserId
+                                 from creator in CreatorGroupJoin.DefaultIfEmpty()
+                                 join modifierProfile in userQuery
+                                 on document.LastModifierId equals modifierProfile.Id into ModifierGroupJoin
+
+                                 from modifier in ModifierGroupJoin.DefaultIfEmpty()
+                                 join creatorProfile in userProfileQuery
+                                 on creator.Id equals creatorProfile.AbpUserId
 
                                  select new
                                     {
@@ -593,10 +609,14 @@ namespace IntranetPortal.AppServices.Documents
                                         creator.UserName,
                                         CreatedByFullName = creator == null
                                         ? null 
-                                        : (string.IsNullOrEmpty(userProfile.MiddleName) 
+                                        : (string.IsNullOrEmpty(creatorProfile.MiddleName) 
                                         ? $"{creator.Name} {creator.Surname}" 
-                                        : $"{creator.Name} {userProfile.MiddleName} {creator.Surname}"),
-                                        /*LastModifiedByFullName*/
+                                        : $"{creator.Name} {creatorProfile.MiddleName} {creator.Surname}"),
+                                       LastModifiedByFullName = modifier == null
+                                       ? null
+                                       : (string.IsNullOrEmpty(creatorProfile.MiddleName)
+                                       ? $"{modifier.Name}{modifier.Surname}"
+                                       : $"{modifier.Name}{creatorProfile.MiddleName}{modifier.Surname}"),
                                  };
 
                     var queryResult = query.Select(x => new DocumentDto
@@ -614,7 +634,7 @@ namespace IntranetPortal.AppServices.Documents
                         DocumentStatusSystemName = x.SystemName,
                         DocumentStatusDisplayName = x.DisplayName,
                         CreatedByFullName = x.CreatedByFullName,
-                        LastModifiedByFullName = x.UserName
+                        LastModifiedByFullName = x.LastModifiedByFullName
                     }).Skip(input.SkipCount).Take(input.MaxResultCount).ToList();
 
                     await uow.CompleteAsync();
