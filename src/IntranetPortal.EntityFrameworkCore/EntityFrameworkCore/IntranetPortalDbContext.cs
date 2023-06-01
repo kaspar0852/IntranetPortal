@@ -60,7 +60,7 @@ public class IntranetPortalDbContext :
     public DbSet<TenantConnectionString> TenantConnectionStrings { get; set; }
 
     #endregion
-    public DbSet<DocumentAcknowledgementRequestStatuses> DocumentAcknowledgementRequestStatus { get; set; }
+    public DbSet<AppEntities.Documents.DocumentAcknowledgementRequestStatuses> DocumentAcknowledgementRequestStatus { get; set; }
     public DbSet<DocumentAcknowledgementRequests> DocumentAcknowledgementRequests { get; set; }
     public DbSet<Department> Departments { get; set; }
     public DbSet<Designation> Designation { get; set; }
@@ -142,7 +142,7 @@ public class IntranetPortalDbContext :
             b.Property(x => x.AcknowledgedDateTime).IsRequired();
             b.Property(x => x.DueDateTime).IsRequired();
             b.HasOne<Document>().WithMany().HasForeignKey(x => x.DocumentId).IsRequired();
-            b.HasOne<DocumentAcknowledgementRequestStatuses>().WithMany().HasForeignKey(x => x.DocumentAcknowledgementRequestStatusId).IsRequired();
+            b.HasOne<DocumentAcknowledgementRequestStatuses>(x => x.DocumentAcknowledgementRequestStatus).WithMany().HasForeignKey(x => x.DocumentAcknowledgementRequestStatusId).IsRequired();
         });
 
         builder.Entity<Department>(b =>

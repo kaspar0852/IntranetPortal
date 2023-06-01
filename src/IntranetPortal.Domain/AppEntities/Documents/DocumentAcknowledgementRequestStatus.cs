@@ -9,8 +9,8 @@ namespace IntranetPortal.AppEntities.Documents
 {
     public class DocumentAcknowledgementRequestStatuses : AggregateRoot<Guid>
     {
-        public string SystemName;
+        public string SystemName { get; set; }
 
-        public string DisplayName;
+        public string DisplayName { get; set; }
     }
 }

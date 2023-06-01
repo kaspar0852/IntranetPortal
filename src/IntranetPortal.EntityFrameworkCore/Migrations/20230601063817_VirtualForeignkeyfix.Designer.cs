@@ -13,8 +13,8 @@ using Volo.Abp.EntityFrameworkCore;
 namespace IntranetPortal.Migrations
 {
     [DbContext(typeof(IntranetPortalDbContext))]
-    [Migration("20230529100428_Designation_and_Department_added")]
-    partial class DesignationandDepartmentadded
+    [Migration("20230601063817_VirtualForeignkeyfix")]
+    partial class VirtualForeignkeyfix
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -299,9 +299,6 @@ namespace IntranetPortal.Migrations
                     b.Property<Guid>("DocumentAcknowledgementRequestStatusId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("DocumentAcknowledgementRequestStatusesId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("DocumentId")
                         .HasColumnType("uuid");
 
@@ -329,9 +326,6 @@ namespace IntranetPortal.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DocumentAcknowledgementRequestStatusId");
-
-                    b.HasIndex("DocumentAcknowledgementRequestStatusesId")
-                        .HasDatabaseName("IX_DocumentAcknowledgementRequests_DocumentAcknowledgementReq~1");
 
                     b.HasIndex("DocumentId");
 
@@ -396,6 +390,154 @@ namespace IntranetPortal.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DocumentStatuses", (string)null);
+                });
+
+            modelBuilder.Entity("IntranetPortal.AppEntities.UserProfiles.UserProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AbpUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("ConcurrencyStamp");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<Guid?>("DepartmentId")
+                        .IsRequired()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("DesignationId")
+                        .IsRequired()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ExtraProperties")
+                        .HasColumnType("text")
+                        .HasColumnName("ExtraProperties");
+
+                    b.Property<DateTime>("HiredDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("MiddleName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProfilePictureUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ReferenceId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("UserProfileStatusId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AbpUserId")
+                        .IsUnique();
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("DesignationId");
+
+                    b.HasIndex("UserProfileStatusId");
+
+                    b.ToTable("UserProfiles", (string)null);
+                });
+
+            modelBuilder.Entity("IntranetPortal.AppEntities.UserProfiles.UserProfileStatus", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("ConcurrencyStamp");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ExtraProperties")
+                        .HasColumnType("text")
+                        .HasColumnName("ExtraProperties");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("SystemName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserProfileStatuses", (string)null);
                 });
 
             modelBuilder.Entity("IntranetPortal.InternalApplications.InternalApplication", b =>
@@ -2125,18 +2267,11 @@ namespace IntranetPortal.Migrations
 
             modelBuilder.Entity("IntranetPortal.AppEntities.Documents.DocumentAcknowledgementRequests", b =>
                 {
-                    b.HasOne("IntranetPortal.AppEntities.Documents.DocumentAcknowledgementRequestStatuses", null)
+                    b.HasOne("IntranetPortal.AppEntities.Documents.DocumentAcknowledgementRequestStatuses", "DocumentAcknowledgementRequestStatus")
                         .WithMany()
                         .HasForeignKey("DocumentAcknowledgementRequestStatusId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("IntranetPortal.AppEntities.Documents.DocumentAcknowledgementRequestStatuses", "DocumentAcknowledgementRequestStatuses")
-                        .WithMany()
-                        .HasForeignKey("DocumentAcknowledgementRequestStatusesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_DocumentAcknowledgementRequests_DocumentAcknowledgementReq~1");
 
                     b.HasOne("IntranetPortal.AppEntities.Documents.Document", null)
                         .WithMany()
@@ -2144,7 +2279,34 @@ namespace IntranetPortal.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("DocumentAcknowledgementRequestStatuses");
+                    b.Navigation("DocumentAcknowledgementRequestStatus");
+                });
+
+            modelBuilder.Entity("IntranetPortal.AppEntities.UserProfiles.UserProfile", b =>
+                {
+                    b.HasOne("Volo.Abp.Identity.IdentityUser", null)
+                        .WithOne()
+                        .HasForeignKey("IntranetPortal.AppEntities.UserProfiles.UserProfile", "AbpUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("IntranetPortal.AppEntities.Department", null)
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("IntranetPortal.AppEntities.Designation", null)
+                        .WithMany()
+                        .HasForeignKey("DesignationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("IntranetPortal.AppEntities.UserProfiles.UserProfileStatus", null)
+                        .WithMany()
+                        .HasForeignKey("UserProfileStatusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLogAction", b =>

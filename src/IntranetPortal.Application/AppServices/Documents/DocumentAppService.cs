@@ -1,9 +1,12 @@
-﻿using IntranetPortal.AppEntities.Documents;
+﻿using IntranetPortal.AppEntities;
+using IntranetPortal.AppEntities.Documents;
 using IntranetPortal.AppEntities.UserProfiles;
+using IntranetPortal.DocumentAcknowledgementRequestStatus;
 using IntranetPortal.Documents;
 using IntranetPortal.Documents.Dtos;
 using IntranetPortal.DocumentStatuses;
 using IntranetPortal.Permissions;
+using IntranetPortal.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -31,6 +34,8 @@ namespace IntranetPortal.AppServices.Documents
         private readonly IRepository<DocumentStatus, Guid> _documentStatusRepository;
         private readonly IRepository<DocumentAcknowledgementRequestStatuses, Guid> _documentAcknowledgementRequestStatus;
         private readonly IRepository<DocumentAcknowledgementRequests, Guid> _documentAcknowledgementRequest;
+        private readonly IRepository<Department, Guid> _departmentRepository;
+        private readonly IRepository<Designation, Guid> _designationRepository;
         private readonly IRepository<UserProfile, Guid> _userProfileRepository;
         private readonly IConfiguration _configuration;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
@@ -41,10 +46,12 @@ namespace IntranetPortal.AppServices.Documents
             IRepository<DocumentStatus, Guid> documentStatusRepository,
             IRepository<Document, Guid> documentrepository,
             IRepository<DocumentAcknowledgementRequestStatuses, Guid> documentAcknowledgementRequestStatus,
-            IRepository<DocumentAcknowledgementRequests,Guid> documentAcknowledgementRequest,
-            IRepository<IdentityUser,Guid> identityUserRepository,
-            IRepository<UserProfile,Guid> userProfileRepository,
-            IUnitOfWorkManager unitOfWorkManager)
+            IRepository<DocumentAcknowledgementRequests, Guid> documentAcknowledgementRequest,
+            IRepository<IdentityUser, Guid> identityUserRepository,
+            IRepository<UserProfile, Guid> userProfileRepository,
+            IUnitOfWorkManager unitOfWorkManager,
+            IRepository<Designation, Guid> designationRepository,
+            IRepository<Department, Guid> departmentRepository)
         {
             _documentStatusRepository = documentStatusRepository;
             _documentRepository = documentrepository;
@@ -54,6 +61,8 @@ namespace IntranetPortal.AppServices.Documents
             _unitOfWorkManager = unitOfWorkManager;
             _identityUserRepository = identityUserRepository;
             _userProfileRepository = userProfileRepository;
+            _designationRepository = designationRepository;
+            _departmentRepository = departmentRepository;
         }
 
         [Authorize(IntranetPortalPermissions.DocumentAdmin.Create)]
@@ -674,5 +683,361 @@ namespace IntranetPortal.AppServices.Documents
             }
         }
 
-     }
+
+        public async Task<PagedResultDto<ReponseForAcknowledgementRequestDto>> GetEmployeesForDocumentAcknowledgementRequestAsync(GetEmployeesForAcknowledgementRequestDto input)
+        {
+            try
+            {
+                Logger.LogInformation($"GetGetEmployeesForDocumentAcknowledgementRequest requested by User:{CurrentUser.Id}");
+                Logger.LogDebug($"GetGetEmployeesForDocumentAcknowledgementRequest requested for InternalApplication:{(CurrentUser.Id, input)}");
+
+                using (var uow = _unitOfWorkManager.Begin())
+                {
+                    var userIdAcknowledgementRequest = (await _documentAcknowledgementRequest.WithDetailsAsync(x => x.DocumentAcknowledgementRequestStatus)).Where(x =>
+                        x.DocumentAcknowledgementRequestStatus.SystemName == DocumentAcknowledgementRequestStatusConstants.NEW ||
+                        x.DocumentAcknowledgementRequestStatus.SystemName == DocumentAcknowledgementRequestStatusConstants.ACKNOWLEDGED &&
+                        x.DocumentId == input.DocumentId).Select(x => x.AbpUserId);
+
+                    var eligibleUsers = (await _identityUserRepository.GetQueryableAsync()).Where(x => !userIdAcknowledgementRequest.Any(c => c == x.Id));
+                    var userProfile = (await _userProfileRepository.GetQueryableAsync()).Where(x => eligibleUsers.Any(a => a.Id == x.AbpUserId));
+                    var departments = await _departmentRepository.GetQueryableAsync();
+                    var designations = await _designationRepository.GetQueryableAsync();
+
+                    var query = from profile in userProfile
+                                join user in eligibleUsers on profile.AbpUserId equals user.Id
+                                join department in departments on profile.DepartmentId equals department.Id
+                                join designation in designations on profile.DesignationId equals designation.Id
+
+                                select new
+                                {
+                                    user.Id,
+                                    user.Name,
+                                    profile.MiddleName,
+                                    user.Surname,
+                                    FullName = user.Name + " " + profile.MiddleName + " " + user.Surname,
+                                    DesignationName = designation.Name,
+                                    DesignationId = designation.Id,
+                                    DepartmentName = department.Name,
+                                    DepartmentId = department.Id,
+                                    profile.ProfilePictureUrl,
+                                    user.Email,
+                                    user.PhoneNumber
+                                };
+
+                    #region Filtering
+                    query = query.WhereIf(input.DepartmentId != null, x => input.DepartmentId.Contains(x.DepartmentId));
+                    query = query.WhereIf(input.DesignationId != null, x => input.DesignationId.Contains(x.DesignationId));
+
+                    if (!string.IsNullOrWhiteSpace(input.SearchKeyword))
+                    {
+                        query = query.Where(x =>
+                        x.Name.ToLower().Contains(input.SearchKeyword.ToLower()) ||
+                        x.Email.ToLower().Contains(input.SearchKeyword.ToLower()));
+                    }
+                    #endregion
+
+                    #region Sorting
+                    switch (input.Sorting)
+                    {
+                        case "Email":
+                            query = input.SortType.ToLower() == "desc"
+                                ? query.OrderByDescending(x => x.Email)
+                                : query.OrderBy(x => x.Email);
+                            break;
+
+                        case "Department":
+                            query = input.SortType.ToLower() == "desc"
+                                ? query.OrderByDescending(x => x.DepartmentId)
+                                : query.OrderBy(x => x.DepartmentId);
+                            break;
+
+                        case "Designation":
+                            query = input.SortType.ToLower() == "desc"
+                                ? query.OrderByDescending(x => x.DesignationId)
+                                : query.OrderBy(x => x.DesignationId);
+                            break;
+
+                        default:
+                            query = input.SortType.ToLower() == "desc"
+                                ? query.OrderByDescending(x => x.FullName)
+                                : query.OrderBy(x => x.FullName);
+                            break;
+
+
+                    }
+                    #endregion
+                    var totalCount = query.Count();
+                    query = query.Skip(input.SkipCount).Take(input.MaxResultCount);
+
+                    var queryResult = query.Select(x =>
+                        new ReponseForAcknowledgementRequestDto
+                        {
+                            Id = x.Id,
+                            Name = x.Name,
+                            Middlename = x.MiddleName,
+                            Surname = x.Surname,
+                            FullName = x.FullName,
+                            Designation = x.DesignationName,
+                            DesignationId = x.DesignationId,
+                            Department = x.DepartmentName,
+                            DepartmentId = x.DepartmentId,
+                            ProfilePictureUrl = x.ProfilePictureUrl,
+                            Email = x.Email,
+                            PhoneNumber = x.PhoneNumber
+                        }).ToList();
+
+                    await uow.CompleteAsync();
+                    Logger.LogInformation($"EmployeesList for EmployeeListForAcknowledgementRequest Responded for User :{CurrentUser.Id}");
+                    return new PagedResultDto<ReponseForAcknowledgementRequestDto>(totalCount, queryResult);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, nameof(GetEmployeesForDocumentAcknowledgementRequestAsync));
+                throw new UserFriendlyException($"An exception was caught. {ex}");
+            }
+        }
+
+        public async Task<ResponseDto> RequestAcknowledgementForDocument(RequestAcknowledgementForDocumentInputDto input)
+        {
+            try
+            {
+                Logger.LogInformation($"RequestAcknowledgementForDocument requested by User:{CurrentUser.Id}");
+                Logger.LogDebug($"RequestAcknowledgementForDocument requested for InternalApplication:{(CurrentUser.Id, input)}");
+
+                if (input.AcknowledgmentRequestedToId == null || input.AcknowledgmentRequestedToId.Count == 0)
+                {
+                    throw new UserFriendlyException("Please select at least one Employee", code: "400");
+                }
+
+                var listOfEmployee = await GetEmployeesForDocumentAcknowledgementRequestAsync(new GetEmployeesForAcknowledgementRequestDto
+                {
+                    DocumentId = input.DocumentId
+                    /*MaxResultCount = 1000*/
+                });
+
+                var filteredEmployees = listOfEmployee.Items.Where(x => input.AcknowledgmentRequestedToId.Contains(x.Id)).ToList();
+
+                if(filteredEmployees.Count != input.AcknowledgmentRequestedToId.Count)
+                {
+                    throw new UserFriendlyException("One or more employees in the acknowledgement list could not be found.", code: "404");
+                }
+
+                using (var uow = _unitOfWorkManager.Begin())
+                {
+                    var document = await _documentRepository.FindAsync(x => x.Id == input.DocumentId);
+
+                    if (document == null)
+                    {
+                        throw new UserFriendlyException("Document not found", code: "404");
+                    }
+
+                    var activeStatus = await _documentStatusRepository.FindAsync(x => x.SystemName == DocumentStatusConstants.ACTIVE);
+
+                    if (document.DocumentStatusId != activeStatus.Id)
+                    {
+                        throw new UserFriendlyException("The Document you are trying to request is not Active", "400");
+                    }
+
+                    var newStatus = await _documentAcknowledgementRequestStatus.FindAsync(x => x.SystemName == DocumentAcknowledgementRequestStatusConstants.NEW);
+                    var dueDateTime = document.CreationTime.AddDays(document.AcknowledgementDeadlineInDays);
+
+                    var newDocumentRequest = filteredEmployees.Select(employee => new DocumentAcknowledgementRequests
+                    {
+                        AbpUserId = employee.Id,
+                        DocumentId = document.Id,
+                        DocumentAcknowledgementRequestStatusId = newStatus.Id,
+                        DueDateTime = dueDateTime
+                    }).ToList();
+                    await uow.CompleteAsync();
+                    await _documentAcknowledgementRequest.InsertManyAsync(newDocumentRequest);
+                    return new ResponseDto { Code = 200, Success = true, Message = "Acknowledgement request is Successfully sent" };
+                }
+            }
+
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, nameof(RequestAcknowledgementForDocument));
+                throw new UserFriendlyException($"An exception was caught. {ex}");
+            }
+        }
+
+        public async Task<PagedResultDto<DocumentAcknowledgementRequestsForMeDto>> GetDocumentAcknowledgementForMeAsync(GetDocumentAcknowledgementRequestsDto input)
+        {
+            try
+            {
+                Logger.LogInformation($"DocumentAcknowledgementForMe requested by User:{CurrentUser.Id}");
+                Logger.LogDebug($"DocumentAcknowledgementForMe requested for InternalApplication:{(CurrentUser.Id, input)}");
+
+                using (var uow = _unitOfWorkManager.Begin())    
+                {
+
+                    var documentQuery = await _documentRepository.GetQueryableAsync();
+                    var documentAcknowledgementRequestQuery = (await _documentAcknowledgementRequest.GetQueryableAsync()).Where(x => x.AbpUserId == CurrentUser.Id);
+                    var documentAcknowledgementRequestStatusQuery = await _documentAcknowledgementRequestStatus.GetQueryableAsync();
+                    var userProfileQuery = await _userProfileRepository.GetQueryableAsync();
+                    var userQuery = await _identityUserRepository.GetQueryableAsync();
+
+                    #region Filter
+
+                    documentAcknowledgementRequestQuery = documentAcknowledgementRequestQuery.WhereIf(input.DocumentAcknowledgementRequestStatusId != null,
+                        x => input.DocumentAcknowledgementRequestStatusId.Contains(x.DocumentAcknowledgementRequestStatusId));
+
+                    if (input.FromDate.HasValue)
+                    {
+                        documentAcknowledgementRequestQuery = documentAcknowledgementRequestQuery.Where(x =>
+                        x.CreationTime.Date >= input.FromDate.Value);
+                    }
+                    if (input.ToDate.HasValue)
+                    {
+                        documentAcknowledgementRequestQuery = documentAcknowledgementRequestQuery.Where(x =>
+                        x.CreationTime.Date <= input.ToDate.Value);
+                    }
+                    if (input.AcknowledgedFromDate.HasValue)
+                    {
+                        documentAcknowledgementRequestQuery = documentAcknowledgementRequestQuery.Where(x =>
+                        x.AcknowledgedDateTime >= input.AcknowledgedFromDate.Value);
+                    }
+                    if (input.AcknowledgedToDate.HasValue)
+                    {
+                        documentAcknowledgementRequestQuery = documentAcknowledgementRequestQuery.Where(x =>
+                        x.AcknowledgedDateTime <= input.AcknowledgedToDate.Value);
+                    }
+                    if (!string.IsNullOrWhiteSpace(input.SearchKeyword))
+                    {
+                        documentQuery = documentQuery.Where(x => x.Name.ToLower().Contains(input.SearchKeyword.ToLower().Trim()));
+                    }
+
+                    #endregion
+
+                    #region Sorting
+
+                    switch (input.Sorting)
+                    {
+                        case "CreationTime":
+                            {
+                                Expression<Func<Document, DateTime>> orderingFunction = (x => x.CreationTime);
+                                documentQuery = input.SortType.ToLower() == "desc"
+                                  ? documentQuery.OrderByDescending(orderingFunction)
+                                  : documentQuery.OrderBy(orderingFunction);
+                                break;
+                            }
+                        default:
+                            {
+                                Expression<Func<Document, string>> orderingFunction = (x => x.Name);
+                                documentQuery = input.SortType.ToLower() == "desc"
+                                  ? documentQuery.OrderByDescending(orderingFunction)
+                                  : documentQuery.OrderBy(orderingFunction);
+                                break;
+                            }
+                    }
+                    #endregion
+
+                    var query = from request in documentAcknowledgementRequestQuery
+                                join document in documentQuery
+                                on request.DocumentId equals document.Id
+
+                                join status in documentAcknowledgementRequestStatusQuery
+                                on request.DocumentAcknowledgementRequestStatusId equals status.Id
+
+                                join abpUser in userQuery
+                                on request.AbpUserId equals abpUser.Id
+
+                                join abpUserProfile in userProfileQuery
+                                on abpUser.Id equals abpUserProfile.AbpUserId
+
+                                join creator in userQuery
+                                on request.CreatorId equals creator.Id into CreatorGroupJoin
+                                from creatorgroupjoin in CreatorGroupJoin.DefaultIfEmpty()
+
+                                join creatorProfile in userProfileQuery
+                                on creatorgroupjoin.Id equals creatorProfile.AbpUserId into CreatorProfileGroupJoin
+                                from creatorProfile in CreatorProfileGroupJoin.DefaultIfEmpty()
+
+                                join modifier in userQuery
+                                on request.LastModifierId equals modifier.Id into ModifierGroupJoin
+                                from modifiergroupjoin in ModifierGroupJoin.DefaultIfEmpty()
+
+                                join modifierProfile in userProfileQuery
+                                on modifiergroupjoin.Id equals modifierProfile.AbpUserId into ModifierProfileGroupJoin
+                                from modifierProfile in ModifierProfileGroupJoin.DefaultIfEmpty()
+
+                                select new
+                                {
+                                    request.Id,
+                                    request.AbpUserId,
+                                    abpUserFullName = $"{abpUser.Name} {abpUserProfile.MiddleName} {abpUser.Surname}",
+                                    request.DocumentId,
+                                    document.Name,
+                                    document.Description,
+                                    document.DocumentUrl,
+                                    document.CreatorId,
+                                    document.LastModifierId,
+                                    creatorFullName = creatorgroupjoin == null ? null
+                                    : (string.IsNullOrEmpty(creatorProfile.MiddleName)
+                                    ? $"{creatorgroupjoin.Name} {creatorgroupjoin.Surname}"
+                                    : $"{creatorgroupjoin.Name} {creatorProfile.MiddleName} {creatorgroupjoin.Surname}"),
+                                    modifierFullName = modifiergroupjoin == null ? null
+                                    : (string.IsNullOrEmpty(modifierProfile.MiddleName)
+                                    ? $"{modifiergroupjoin.Name} {modifiergroupjoin.Surname}"
+                                    :$"{modifiergroupjoin.Name} {modifierProfile.MiddleName} {modifiergroupjoin.Surname}"),
+                                    document.CreationTime,
+                                    document.LastModificationTime,
+                                    request.DocumentAcknowledgementRequestStatusId,
+                                    status.SystemName,
+                                    status.DisplayName,
+                                    request.AcknowledgedDateTime,
+                                    request.DueDateTime
+                                };
+
+
+                    var totalCount = query.Count();
+                    var queryResult = query.Select(x => new DocumentAcknowledgementRequestsForMeDto
+                    {
+                        Id = x.Id,
+                        AcknowledgementRequestedToId = x.AbpUserId,
+                        AcknowledgementRequestedToFullName = x.abpUserFullName,
+                        DocumentId = x.DocumentId,
+                        DocumentName = x.Name,
+                        DocumentDescription = x.Description,
+                        DocumentUrl = x.DocumentUrl,
+                        CreatorId = x.CreatorId,
+                        LastModifierId = x.LastModifierId,
+                        CreatedByFullName = x.creatorFullName,
+                        LastModifiedByFullName = x.modifierFullName,
+                        CreationTime = x.CreationTime,
+                        LastModificationTime = x.LastModificationTime,
+                        DocumentAcknowledgementRequestStatusId = x.DocumentAcknowledgementRequestStatusId,
+                        DocumentAcknowledgementRequestStatusSystemName = x.SystemName,
+                        DocumentAcknowledgementRequestStatusDisplayName = x.DisplayName,
+                        AcknowledgementDoneDateTime = x.AcknowledgedDateTime == null ? null : x.AcknowledgedDateTime,
+                        DueDateTime = x.DueDateTime
+                    }).Skip(input.SkipCount).Take(input.MaxResultCount).ToList();
+
+                    await uow.CompleteAsync();
+                    Logger.LogInformation($"DocumentAcknowledgementForMe responded for User:{CurrentUser.Id}");
+                    return new PagedResultDto<DocumentAcknowledgementRequestsForMeDto>(totalCount, queryResult);
+                }
+            }
+            catch(Exception ex)
+            {
+                Logger.LogError(ex, nameof(RequestAcknowledgementForDocument));
+                throw new UserFriendlyException($"An exception was caught. {ex}");
+            }
+        }
+
+        public async Task<PagedResultDto<DocumentAcknowledgementRequestDto>> GetPagedAndSortedDocumentAcknowledgmentRequestForAdminAsync(PagedAndSortedDocumentAcknowledgementRequestListDto input)
+        {
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+
+    }
 }

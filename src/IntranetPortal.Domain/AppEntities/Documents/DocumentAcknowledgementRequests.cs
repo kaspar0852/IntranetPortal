@@ -14,6 +14,6 @@ namespace IntranetPortal.AppEntities.Documents
         public Guid DocumentAcknowledgementRequestStatusId { get; set; }
         public DateTime AcknowledgedDateTime { get; set; }
         public DateTime DueDateTime { get; set; }
-        public virtual DocumentAcknowledgementRequestStatuses DocumentAcknowledgementRequestStatuses { get; set; }
+        public virtual DocumentAcknowledgementRequestStatuses DocumentAcknowledgementRequestStatus { get; set; }
     }
 }

@@ -7,7 +7,7 @@ using Volo.Abp.Application.Dtos;
 
 namespace IntranetPortal.Departments
 {
-    public interface IDepartment
+    public interface IDepartmentAppService
     {
         Task<List<GetDepartmentDto>> GetDepartmentAsync();
         Task<PagedResultDto<ActiveDepartmentDto>> GetActiveDepartmentAsync();

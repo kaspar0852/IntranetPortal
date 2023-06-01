@@ -1,5 +1,6 @@
 ﻿using IntranetPortal.Documents.Dtos;
 using IntranetPortal.InternalApplicationDto;
+using IntranetPortal.Responses;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -21,5 +22,7 @@ namespace IntranetPortal.Documents
         Task<DeactivateDocumentDto> DeactivateDocumentAsync(Guid id);
         Task<PagedResultDto<DocumentDto>> GetPagedAndSortedDocumentListAsync(PagedAndSortedDocumentListDto input);
         Task<List<GetDocumentAcknowledgementRequestStatusDto>> GetDocumentAcknowledgementRequestStatusAsync();
+        Task<PagedResultDto<ReponseForAcknowledgementRequestDto>> GetEmployeesForDocumentAcknowledgementRequestAsync(GetEmployeesForAcknowledgementRequestDto input);
+        Task<ResponseDto> RequestAcknowledgementForDocument(RequestAcknowledgementForDocumentInputDto input);
     }
 }

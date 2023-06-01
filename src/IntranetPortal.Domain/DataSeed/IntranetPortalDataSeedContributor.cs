@@ -46,7 +46,12 @@ namespace IntranetPortal.DataSeed
         {
             var identityUser1 = (await _userRepository.GetQueryableAsync()).Where(x =>x.Name == "admin").First();
             var identityUser2 = (await _userRepository.GetQueryableAsync()).Where(x => x.UserName == "Saugat").First();
-
+            var identityUser3 = (await _userRepository.GetQueryableAsync()).Where(x => x.UserName == "Max").First();
+            var identityUser4 = (await _userRepository.GetQueryableAsync()).Where(x => x.UserName == "Prabin").First();
+            var identityUser5 = (await _userRepository.GetQueryableAsync()).Where(x => x.UserName == "Sujan").First();
+            var identityUser6 = (await _userRepository.GetQueryableAsync()).Where(x => x.UserName == "Joey").First();
+            var identityUser7 = (await _userRepository.GetQueryableAsync()).Where(x => x.UserName == "Chandler").First();
+            var identityUser8 = (await _userRepository.GetQueryableAsync()).Where(x => x.UserName == "Phil").First();
             //DocumentStatus
             if (await _documentStatusRepository.GetCountAsync() <= 0)
             {
@@ -68,7 +73,6 @@ namespace IntranetPortal.DataSeed
                     );
             }
             var documentStatuses = await _documentStatusRepository.GetListAsync();
-            
             //Document
             if(await _documentRepository.GetCountAsync() <=0)
             {
@@ -86,31 +90,31 @@ namespace IntranetPortal.DataSeed
             var documents = await _documentRepository.GetListAsync();
 
             //DocumentAcknowledgementRequest
-            if(await _documentAcknowledgementRequestStatus.GetCountAsync() <= 0)
+ /*           if(await _documentAcknowledgementRequestStatus.GetCountAsync() <= 0)
             {
                 await _documentAcknowledgementRequestStatus.InsertAsync(
-                    new DocumentAcknowledgementRequestStatuses
+                    new A.DocumentAcknowledgementRequestStatuses
                     {
                         SystemName = "New",
                         DisplayName = "New"
                     },autoSave: true
                     );
                 await _documentAcknowledgementRequestStatus.InsertAsync(
-                    new DocumentAcknowledgementRequestStatuses
+                    new AppEntities.Documents.DocumentAcknowledgementRequestStatus
                     {
                         SystemName = "Revoked",
                         DisplayName = "Revoked"
                     },autoSave : true
                     );
                 await _documentAcknowledgementRequestStatus.InsertAsync(
-                    new DocumentAcknowledgementRequestStatuses
+                    new AppEntities.Documents.DocumentAcknowledgementRequestStatus
                     {
                         SystemName = "Acknowledged",
                         DisplayName = "Acknowledged"
                     },autoSave : true
                     );
             }
-            var documentAcknowledgementRequests = await _documentAcknowledgementRequestStatus.GetListAsync();
+            var documentAcknowledgementRequests = await _documentAcknowledgementRequestStatus.GetListAsync();*/
 
             //Department
             if(await _department.GetCountAsync() <= 0)
@@ -183,15 +187,100 @@ namespace IntranetPortal.DataSeed
                     AbpUserId = identityUser1.Id,
                     DesignationId = designations[0].Id,
                     DepartmentId = departments[1].Id,
-                    DateOfBirth = DateTime.Now.AddDays(-200000),
-                    ProfilePictureUrl = "http://saugat.jpg",
+                    DateOfBirth = DateTime.Now.AddDays(-100000),
+                    ProfilePictureUrl = "http://ADMIN.jpg",
                     HiredDate = DateTime.Now.AddDays(-90),
                     ReferenceId = "2020",
                     MiddleName = "Raj",
                     UserProfileStatusId = userStatuses[0].Id
                 };
+                var UserProfile2 = new UserProfile
+                {
+                    AbpUserId = identityUser2.Id,
+                    DesignationId = designations[1].Id,
+                    DepartmentId = departments[0].Id,
+                    DateOfBirth = DateTime.Now.AddDays(-200000),
+                    ProfilePictureUrl = "http://saugat.jpg",
+                    HiredDate = DateTime.Now.AddDays(-80),
+                    ReferenceId = "2021",
+                    MiddleName = "Kumari",
+                    UserProfileStatusId = userStatuses[0].Id
+                };
+                var UserProfile3 = new UserProfile
+                {
+                    AbpUserId = identityUser3.Id,
+                    DesignationId = designations[0].Id,
+                    DepartmentId = departments[1].Id,
+                    DateOfBirth = DateTime.Now.AddDays(-500000),
+                    ProfilePictureUrl = "http://max.jpg",
+                    HiredDate = DateTime.Now.AddDays(-70),
+                    ReferenceId = "2022",
+                    MiddleName = "Sharma",
+                    UserProfileStatusId = userStatuses[1].Id
+                };
+                var UserProfile4 = new UserProfile
+                {
+                    AbpUserId = identityUser4.Id,
+                    DesignationId = designations[1].Id,
+                    DepartmentId = departments[1].Id,
+                    DateOfBirth = DateTime.Now.AddDays(-100000),
+                    ProfilePictureUrl = "http://Prabin.jpg",
+                    HiredDate = DateTime.Now.AddDays(-10),
+                    ReferenceId = "2023",
+                    MiddleName = "Falula",
+                    UserProfileStatusId = userStatuses[1].Id
+                };
+                var UserProfile5 = new UserProfile
+                {
+                    AbpUserId = identityUser5.Id,
+                    DesignationId = designations[1].Id,
+                    DepartmentId = departments[0].Id,
+                    DateOfBirth = DateTime.Now.AddDays(-300000),
+                    ProfilePictureUrl = "http://sujan.jpg",
+                    HiredDate = DateTime.Now.AddDays(-30),
+                    ReferenceId = "2024",
+                    MiddleName = "Sha",
+                    UserProfileStatusId = userStatuses[0].Id
+                };
+                var UserProfile6 = new UserProfile
+                {
+                    AbpUserId = identityUser6.Id,
+                    DesignationId = designations[0].Id,
+                    DepartmentId = departments[0].Id,
+                    DateOfBirth = DateTime.Now.AddDays(-500000),
+                    ProfilePictureUrl = "http://Joey.jpg",
+                    HiredDate = DateTime.Now.AddDays(-50),
+                    ReferenceId = "2025",
+                    MiddleName = "Mureal",
+                    UserProfileStatusId = userStatuses[1].Id
+                };
+                var UserProfile7 = new UserProfile
+                {
+                    AbpUserId = identityUser7.Id,
+                    DesignationId = designations[0].Id,
+                    DepartmentId = departments[1].Id,
+                    DateOfBirth = DateTime.Now.AddDays(-700000),
+                    ProfilePictureUrl = "http://Chandler.jpg",
+                    HiredDate = DateTime.Now.AddDays(-20),
+                    ReferenceId = "2026",
+                    MiddleName = "Bob",
+                    UserProfileStatusId = userStatuses[0].Id
+                };
+                var UserProfile8 = new UserProfile
+                {
+                    AbpUserId = identityUser8.Id,
+                    DesignationId = designations[0].Id,
+                    DepartmentId = departments[1].Id,
+                    DateOfBirth = DateTime.Now.AddDays(-500000),
+                    ProfilePictureUrl = "http://phil.jpg",
+                    HiredDate = DateTime.Now.AddDays(-25),
+                    ReferenceId = "2027",
+                    MiddleName = "Super",
+                    UserProfileStatusId = userStatuses[1].Id
+                };
 
-                await _userProfileRepository.InsertAsync(UserProfile1, autoSave: true);
+                await _userProfileRepository.InsertManyAsync(new[] { UserProfile1, UserProfile2,UserProfile3, UserProfile4,
+                    UserProfile5,UserProfile6,UserProfile7,UserProfile8 }, autoSave: true);
 
             }
         }

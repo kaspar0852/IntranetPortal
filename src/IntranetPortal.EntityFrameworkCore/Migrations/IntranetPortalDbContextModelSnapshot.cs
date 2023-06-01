@@ -296,9 +296,6 @@ namespace IntranetPortal.Migrations
                     b.Property<Guid>("DocumentAcknowledgementRequestStatusId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("DocumentAcknowledgementRequestStatusesId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("DocumentId")
                         .HasColumnType("uuid");
 
@@ -326,9 +323,6 @@ namespace IntranetPortal.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DocumentAcknowledgementRequestStatusId");
-
-                    b.HasIndex("DocumentAcknowledgementRequestStatusesId")
-                        .HasDatabaseName("IX_DocumentAcknowledgementRequests_DocumentAcknowledgementReq~1");
 
                     b.HasIndex("DocumentId");
 
@@ -2270,18 +2264,11 @@ namespace IntranetPortal.Migrations
 
             modelBuilder.Entity("IntranetPortal.AppEntities.Documents.DocumentAcknowledgementRequests", b =>
                 {
-                    b.HasOne("IntranetPortal.AppEntities.Documents.DocumentAcknowledgementRequestStatuses", null)
+                    b.HasOne("IntranetPortal.AppEntities.Documents.DocumentAcknowledgementRequestStatuses", "DocumentAcknowledgementRequestStatus")
                         .WithMany()
                         .HasForeignKey("DocumentAcknowledgementRequestStatusId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("IntranetPortal.AppEntities.Documents.DocumentAcknowledgementRequestStatuses", "DocumentAcknowledgementRequestStatuses")
-                        .WithMany()
-                        .HasForeignKey("DocumentAcknowledgementRequestStatusesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_DocumentAcknowledgementRequests_DocumentAcknowledgementReq~1");
 
                     b.HasOne("IntranetPortal.AppEntities.Documents.Document", null)
                         .WithMany()
@@ -2289,7 +2276,7 @@ namespace IntranetPortal.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("DocumentAcknowledgementRequestStatuses");
+                    b.Navigation("DocumentAcknowledgementRequestStatus");
                 });
 
             modelBuilder.Entity("IntranetPortal.AppEntities.UserProfiles.UserProfile", b =>
