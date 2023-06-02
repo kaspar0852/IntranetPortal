@@ -24,5 +24,10 @@ namespace IntranetPortal.Documents
         Task<List<GetDocumentAcknowledgementRequestStatusDto>> GetDocumentAcknowledgementRequestStatusAsync();
         Task<PagedResultDto<ReponseForAcknowledgementRequestDto>> GetEmployeesForDocumentAcknowledgementRequestAsync(GetEmployeesForAcknowledgementRequestDto input);
         Task<ResponseDto> RequestAcknowledgementForDocument(RequestAcknowledgementForDocumentInputDto input);
+        Task<PagedResultDto<DocumentAcknowledgementRequestsForMeDto>> GetDocumentAcknowledgementForMeAsync(GetDocumentAcknowledgementRequestsDto input);
+        Task<PagedResultDto<DocumentAcknowledgementRequestDto>> GetPagedAndSortedDocumentAcknowledgmentRequestForAdminAsync(PagedAndSortedDocumentAcknowledgementRequestListDto input);
+        Task<ResponseDto> RevokeDocumentAcknowledgementRequestAsync(RevokeDocumentAcknowledgementRequestDto input);
+        Task<DocumentDto> ReuploadDocumentAsync(ReuploadDocumentInputDto input);
+        Task<ResponseDto> AcknowledgeDocumentRequestAsync(Guid id);
     }
 }
