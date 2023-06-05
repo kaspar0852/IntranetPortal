@@ -26,8 +26,17 @@ public static class IntranetPortalPermissions
         public const string Upload = Default + ".UploadDocument";
         public const string ActivateDocument = Default + ".ActivateDocument";
         public const string DeactivateDocument = Default + ".DeactivateDocument";
+        public const string ReUpload = Default + ".ReUploadDocument";
     }
 
+    //DocumentAcknowledgementRequests permissions
+    public class DocumentAcknowledgementRequestAdmin
+    {
+        public const string Default = GroupName + ".DocumentAcknowledgementRequestAdmin";
+        public const string Create = Default + ".CreateDocumentAcknowledgementRequest";
+        public const string Revoke = Default + ".RevokeDocumentAcknowledgementRequest";
+        public const string Get = Default + ".GetDocumentAcknowledgmentRequestForAdmin";
+    }
 
 
 }

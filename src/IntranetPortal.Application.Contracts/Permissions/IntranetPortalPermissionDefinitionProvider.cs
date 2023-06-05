@@ -28,7 +28,13 @@ public class IntranetPortalPermissionDefinitionProvider : PermissionDefinitionPr
         documentAdminPermission.AddChild(IntranetPortalPermissions.DocumentAdmin.ActivateDocument, L("Permission:DocumentAdmin.ActivateDocument"));
         documentAdminPermission.AddChild(IntranetPortalPermissions.DocumentAdmin.DeactivateDocument, L("Permission:DocumentAdmin.DeactivateDocument"));
         documentAdminPermission.AddChild(IntranetPortalPermissions.DocumentAdmin.Upload, L("Permission:DocumentAdmin.UploadDocument"));
+        documentAdminPermission.AddChild(IntranetPortalPermissions.DocumentAdmin.ReUpload, L("Permission:DocumentAdmin.ReUploadDocument"));
 
+        //DocumentAcknowledgementRequests
+        var documentAcknowledgementRequestAdminPermission = intranetProtalGroup.AddPermission(IntranetPortalPermissions.DocumentAcknowledgementRequestAdmin.Default, L("Permission:DocumentAcknowledgementRequestAdmin"));
+        documentAcknowledgementRequestAdminPermission.AddChild(IntranetPortalPermissions.DocumentAcknowledgementRequestAdmin.Create, L("Permission:DocumentAcknowledgementRequestAdmin.CreateDocumentAcknowledgementRequest"));
+        documentAcknowledgementRequestAdminPermission.AddChild(IntranetPortalPermissions.DocumentAcknowledgementRequestAdmin.Revoke, L("Permission:DocumentAcknowledgementRequestAdmin.RevokeDocumentAcknowledgementRequest"));
+        documentAcknowledgementRequestAdminPermission.AddChild(IntranetPortalPermissions.DocumentAcknowledgementRequestAdmin.Get, L("Permission:DocumentAcknowledgementRequestAdmin.GetDocumentAcknowledgementRequestForAdmin"));
     }
 
     private static LocalizableString L(string name)

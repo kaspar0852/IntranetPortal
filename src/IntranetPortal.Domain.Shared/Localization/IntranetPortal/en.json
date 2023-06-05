@@ -13,7 +13,11 @@
     "Permission:DocumentAdmin.DeleteDocument": "Deleting the Document",
     "Permission:DocumentAdmin.ActivateDocument": "Activate the Document",
     "Permission:DocumentAdmin.DeactivateDocument": "Deactivating the Document",
-    "Permission:DocumentAdmin.UploadDocument": "Uploading the Document"
-
+    "Permission:DocumentAdmin.UploadDocument": "Uploading the Document",
+    "Permission:DocumentAdmin.ReUploadDocument": "Re-Uploading the Document",
+    "Permission:DocumentAcknowledgementRequestAdmin": "DocumentAcknowledgementRequestAdmin Management",
+    "Permission:DocumentAcknowledgementRequestAdmin.CreateDocumentAcknowledgementRequest": "Creating new DocumentAcknowledgementRequest",
+    "Permission:DocumentAcknowledgementRequestAdmin.RevokeDocumentAcknowledgementRequest": "Revoking the DocumentAcknowledgementRequest",
+    "Permission:DocumentAcknowledgementRequestAdmin.GetDocumentAcknowledgementRequestForAdmin": "Getting DocumentAcknowledgmentRequestForAdmin"
   }
 }
